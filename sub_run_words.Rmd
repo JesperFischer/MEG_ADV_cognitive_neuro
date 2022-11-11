@@ -1,0 +1,79 @@
+---
+title: "Concrete_vs_abstract"
+output: html_document
+date: '2022-11-11'
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+
+```
+
+```{r}
+raw = data.frame(NULL)
+for (i in 1:12){
+  #going into the subject folder
+  setwd(dir_list[i])
+  #extracting all tsv files
+  rawfiles <- list.files(pattern="*.tsv$", recursive = T)
+  #making sure there is 6
+  print(i)
+  if(length(rawfiles) != 6){
+    print("subject does not have 6 tsv files")
+    print(i)}
+  ii = 1
+  for (ii in 1:length(rawfiles)){
+    df = read_tsv(rawfiles[ii])
+    raw = rbind(raw,df)
+    }
+}
+
+```
+
+
+
+## R Markdown
+
+```{r}
+#get all the subject folders
+dir_list <- list.dirs("/work/82777/BIDS",recursive = FALSE) 
+#only those that contain sub
+dir_list = dir_list[grepl("sub",dir_list)]
+
+#getting the functional directory as this is where the tsv files are
+dir_list = paste(dir_list, "/func", sep = "")
+
+
+raw = data.frame(NULL)
+
+
+#looping through each subject and getting their events.
+for (i in 1:length(dir_list)){
+  #going into the subject folder
+  setwd(dir_list[i])
+  #extracting all tsv files
+  rawfiles <- list.files(pattern="*.tsv$", recursive = T)
+  #making sure there is 6
+  if(length(rawfiles) != 6){
+    print("subject does not have 6 tsv files")
+    print(i)}
+  
+  for (ii in 1:length(rawfiles)){
+    df = read_tsv(rawfiles[ii])
+    
+    if("ses" %in% colnames(df)){
+      df$ses = NULL
+      raw = rbind(raw,df)}
+    
+    raw = rbind(raw,df)
+    }
+}
+
+
+
+
+hist(as.numeric(raw$response_time))
+
+```
+
