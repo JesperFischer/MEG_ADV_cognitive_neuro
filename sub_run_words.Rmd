@@ -35,7 +35,7 @@ for (i in 1:12){
 
 ## R Markdown
 
-```{r}
+```{r FMRI}
 #get all the subject folders
 dir_list <- list.dirs("/work/82777/BIDS",recursive = FALSE) 
 #only those that contain sub
@@ -45,7 +45,7 @@ dir_list = dir_list[grepl("sub",dir_list)]
 dir_list = paste(dir_list, "/func", sep = "")
 
 
-raw = data.frame(NULL)
+rawmr = data.frame(NULL)
 
 
 #looping through each subject and getting their events.
@@ -64,16 +64,36 @@ for (i in 1:length(dir_list)){
     
     if("ses" %in% colnames(df)){
       df$ses = NULL
-      raw = rbind(raw,df)}
+      rawmr = rbind(rawmr,df)}
     
-    raw = rbind(raw,df)
+    rawmr = rbind(rawmr,df)
     }
 }
 
 
 
 
-hist(as.numeric(raw$response_time))
+
+```
+
+```{r MEG}
+setwd("/work/220269/raw_MEG_logfiles")
+dir_list = list.files(pattern="*.csv")
+
+participants = c("0085","0086","0087","0088","0089","0095")
+
+
+
+
+rawmeg = data.frame(NULL)
+
+
+#looping through each subject and getting their events.
+for (i in 1:length(dir_list)){
+  df = read.csv(dir_list[i])
+  rawmeg = rbind(rawmeg,df)
+}
+
 
 ```
 
