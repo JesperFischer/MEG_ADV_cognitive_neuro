@@ -10,28 +10,6 @@ library(tidyverse)
 
 ```
 
-```{r}
-raw = data.frame(NULL)
-for (i in 1:12){
-  #going into the subject folder
-  setwd(dir_list[i])
-  #extracting all tsv files
-  rawfiles <- list.files(pattern="*.tsv$", recursive = T)
-  #making sure there is 6
-  print(i)
-  if(length(rawfiles) != 6){
-    print("subject does not have 6 tsv files")
-    print(i)}
-  ii = 1
-  for (ii in 1:length(rawfiles)){
-    df = read_tsv(rawfiles[ii])
-    raw = rbind(raw,df)
-    }
-}
-
-```
-
-
 
 ## R Markdown
 
@@ -96,4 +74,24 @@ for (i in 1:length(dir_list)){
 
 
 ```
+
+
+
+
+
+
+
+
+
+```{r}
+
+rawmr$concreteness = doc2concrete(rawmr$word)
+rawmr$con = ifelse(rawmr$concreteness>median(rawmr$concreteness), "concrete","abstract")
+
+rawmr$trial_type1 = ifelse(str_detect(rawmr$trial_type,"image"), rawmr$trial_type,
+                    ifelse(str_detect(rawmr$trial_type,"word"), rawmr$con,NA))
+
+rawmr$trial_type1
+```
+
 
