@@ -7,7 +7,7 @@ date: '2022-11-11'
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 library(tidyverse)
-
+library(doc2concrete)
 ```
 
 
@@ -15,7 +15,7 @@ library(tidyverse)
 
 ```{r FMRI}
 #get all the subject folders
-dir_list <- list.dirs("/work/82777/BIDS",recursive = FALSE) 
+dir_list <- list.dirs("/work/MEG_exam/82777/BIDS",recursive = FALSE) 
 #only those that contain sub
 dir_list = dir_list[grepl("sub",dir_list)]
 
@@ -26,12 +26,16 @@ dir_list = paste(dir_list, "/func", sep = "")
 rawmr = data.frame(NULL)
 
 
+i = 1
+ii = 1
+
 #looping through each subject and getting their events.
 for (i in 1:length(dir_list)){
   #going into the subject folder
   setwd(dir_list[i])
   #extracting all tsv files
   rawfiles <- list.files(pattern="*.tsv$", recursive = T)
+
   #making sure there is 6
   if(length(rawfiles) != 6){
     print("subject does not have 6 tsv files")
@@ -39,6 +43,12 @@ for (i in 1:length(dir_list)){
   
   for (ii in 1:length(rawfiles)){
     df = read_tsv(rawfiles[ii])
+    df$concreteness = doc2concrete(df$word)
+    df$con = ifelse(df$concreteness>median(df$concreteness), "concrete","abstract")
+    
+    df$trial_type1 = ifelse(str_detect(df$trial_type,"image"), df$trial_type,
+                        ifelse(str_detect(df$trial_type,"word"), df$con,NA))
+    write_tsv(df,rawfiles[ii])
     
     if("ses" %in% colnames(df)){
       df$ses = NULL
