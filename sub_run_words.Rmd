@@ -65,11 +65,11 @@ for (i in 1:length(dir_list)){
 ```
 
 ```{r MEG}
-setwd("/work/220269/raw_MEG_logfiles")
+setwd("/work/MEG_exam/MEG_data/raw_MEG_logfiles")
 dir_list = list.files(pattern="*.csv")
 
-participants = c("0085","0086","0087","0088","0089","0095")
 
+participants = c("0085","0086","0087","0088","0089","0095")
 
 
 
@@ -79,10 +79,27 @@ rawmeg = data.frame(NULL)
 #looping through each subject and getting their events.
 for (i in 1:length(dir_list)){
   df = read.csv(dir_list[i])
+  df$response_trigger = NA
+  df = df %>% pivot_longer(cols = c("word_trigger","pause_trigger","img_trigger","response_trigger"))
+  df$concreteness = doc2concrete(df$word)
+  df$con = ifelse(df$concreteness>median(df$concreteness), "concrete","abstract")
+  write.csv(df,dir_list[i])
   rawmeg = rbind(rawmeg,df)
 }
 
 
+```
+
+
+
+```{r}
+
+df$concreteness = doc2concrete(df$word)
+df$con = ifelse(df$concreteness>median(df$concreteness), "concrete","abstract")
+
+
+df$response_trigger = NA
+df %>% pivot_longer(cols = c("word_trigger","pause_trigger","img_trigger","response_trigger"))
 ```
 
 
