@@ -8,6 +8,7 @@ date: '2022-11-11'
 knitr::opts_chunk$set(echo = TRUE)
 library(tidyverse)
 library(doc2concrete)
+library(glmmTMB)
 ```
 
 
@@ -48,7 +49,7 @@ for (i in 1:length(dir_list)){
     
     df$trial_type1 = ifelse(str_detect(df$trial_type,"image"), df$trial_type,
                         ifelse(str_detect(df$trial_type,"word"), df$con,NA))
-    write_tsv(df,rawfiles[ii])
+    #write_tsv(df,rawfiles[ii])
     
     if("ses" %in% colnames(df)){
       df$ses = NULL
@@ -64,7 +65,92 @@ for (i in 1:length(dir_list)){
 
 ```
 
+```{r}
+library(ggdist)
+library(stringr)
+raw = rawmr %>% filter(response_time>0.100) %>% dplyr::select(response_time, word, gender, sub, run,year,month,day, con,trial_type,trial_type1)
+
+raw$response_time = as.numeric(raw$response_time)
+raw$sub = as.factor(raw$sub)
+raw$con = as.factor(raw$con)
+raw$valenced = ifelse(raw$trial_type == "word_neg", "Valenced", ifelse(raw$trial_type == "word_pos", "Valenced", "Neutral"))
+
+raw %>% filter(str_detect(trial_type, "image") == F)
+
+raw %>% filter(str_detect(trial_type, "image") == F) %>% ggplot(aes(x = con, y = response_time, fill = con, col = con))+
+  geom_boxplot(notch = TRUE, position = position_nudge(x = -0.1, y = 0), width = 0.15, outlier.shape = NA, show.legend = FALSE)+
+  ggdist::geom_dots(size = 0.6, width = 0.8)+
+  ggdist::stat_pointinterval(col = "black")+
+  ylim(0.2,1.25)+
+  theme_classic()+
+  ylab("\nResponse time")+
+  xlab("\nWord Type")+
+  coord_flip()+
+  facet_grid(~valenced)+
+  theme(text = element_text(size = 22))+guides(col = guide_legend(title="Word-Type"),fill=guide_legend(title="Word-Type"))
+
+
+```
+
+```{r}
+library(lmerTest)
+library(DHARMa)
+
+rtmodel1 = glmmTMB(response_time ~ con*valenced+(1|sub),
+        data = raw %>% filter(str_detect(trial_type, "image") == F),
+        family = Gamma(link = "log"))
+
+summary(rtmodel1)
+
+
+rtmodel_sim = simulateResiduals(rtmodel1)
+
+plot(rtmodel_sim)
+
+glmmTMB:::Anova.glmmTMB(rtmodel1)
+plot(ggeffects::ggpredict(rtmodel1, terms = c("con","valenced")))+theme(text = element_text(size = 22))
+
+
+
+
+
+linear = glmmTMB(response_time ~ con*valenced+(1|sub),
+        data = raw %>% filter(str_detect(trial_type, "image") == F),
+        family = gaussian())
+
+summary(linear)
+
+linear_sim = simulateResiduals(linear)
+
+plot(linear_sim)
+
+
+
+raw %>% filter(str_detect(valenced, "image") == F) %>% group_by(con,valenced) %>% summarize(n = n()) %>% ggplot(aes(x = con,y=n, fill = con))+stat_summary(geom="bar")+facet_grid(~valenced)+theme_classic()+theme(text = element_text(size = 22))+ylab("Count")+xlab("Word-Type")+guides(col = guide_legend(title="Word-Type"),fill=guide_legend(title="Word-Type"))
+
+
+
+#valence effect
+exp(-0.4247126+0.0912588)/exp(-0.4247126)
+
+#interaction:
+exp(-0.513400-0.023636 )/exp(-0.513400)
+
+
+
+```
+
+
+
+
+
+
+
+
+
+
 ```{r MEG}
+
 setwd("/work/MEG_exam/MEG_data/raw_MEG_logfiles")
 dir_list = list.files(pattern="*.csv")
 
@@ -79,16 +165,87 @@ rawmeg = data.frame(NULL)
 #looping through each subject and getting their events.
 for (i in 1:length(dir_list)){
   df = read.csv(dir_list[i])
-  df$response_trigger = NA
-  df = df %>% pivot_longer(cols = c("word_trigger","pause_trigger","img_trigger","response_trigger"))
-  df$concreteness = doc2concrete(df$word)
-  df$con = ifelse(df$concreteness>median(df$concreteness), "concrete","abstract")
-  write.csv(df,dir_list[i])
+  df = df[seq(1,nrow(df),4),]
+  #write.csv(df,dir_list[i])
   rawmeg = rbind(rawmeg,df)
 }
 
 
 ```
+```{r}
+
+
+raw = rawmeg %>% filter(rt>0.100)
+
+
+raw$rt = as.numeric(raw$rt)
+raw$ID = as.factor(raw$ID)
+raw$con = as.factor(raw$con)
+raw$valenced = ifelse(raw$word_label == "neg", "Valenced", ifelse(raw$word_label == "pos", "Valenced", "Neutral"))
+
+
+
+raw %>% ggplot(aes(x = con, y = rt, fill = con, col = con))+
+  geom_boxplot(notch = TRUE, position = position_nudge(x = -0.1, y = 0), width = 0.15, outlier.shape = NA, show.legend = FALSE)+
+  ggdist::geom_dots(dotsize = 1, width = 0.8)+
+  ggdist::stat_pointinterval(col = "black")+
+  theme_classic()+
+  ylab("\nResponse time")+
+  xlab("\nWord Type")+
+  coord_flip()+
+  facet_grid(~valenced)+
+  theme(text = element_text(size = 22))+guides(col = guide_legend(title="Word-Type"),fill=guide_legend(title="Word-Type"))
+
+
+
+
+```
+
+
+
+```{r}
+library(lmerTest)
+library(DHARMa)
+
+rtmodel1 = glmmTMB(rt ~ con*valenced+(1|ID),
+        data = raw,
+        family = Gamma(link = "log"))
+
+summary(rtmodel1)
+
+
+rtmodel_sim = simulateResiduals(rtmodel1)
+
+plot(rtmodel_sim)
+
+glmmTMB:::Anova.glmmTMB(rtmodel1)
+plot(ggeffects::ggpredict(rtmodel1, terms = c("con","valenced")))+theme(text = element_text(size = 22))
+
+
+
+
+
+linear = glmmTMB(rt ~ con*valenced+(1|ID),
+        data = raw,
+        family = gaussian())
+
+summary(linear)
+
+linear_sim = simulateResiduals(linear)
+
+plot(linear_sim)
+
+
+
+1-exp(-0.8236045-0.0806120)/exp(-0.8236045)
+
+```
+
+
+
+
+
+
 
 
 
