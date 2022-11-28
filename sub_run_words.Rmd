@@ -136,9 +136,10 @@ rtmodel_sim = simulateResiduals(rtmodel1)
 plot(rtmodel_sim)
 
 glmmTMB:::Anova.glmmTMB(rtmodel1)
-plot(ggeffects::ggpredict(rtmodel1, terms = c("con","valenced")))+theme(text = element_text(size = 22))
+g = ggeffects::ggemmeans(rtmodel1, terms = c("con","valenced"))
 
 
+g %>% ggplot(aes(x = x, y = predicted, col = group, group = group))+geom_point()+theme_classic()+geom_line()+geom_errorbar(aes(ymin = conf.low,ymax = conf.high, y = predicted, x = x, width =.05))+guides(col = guide_legend(title=" "),fill=guide_legend(title=" "))+theme(text = element_text(size = 22))+xlab(" ")+ylab("Predicted Response time")
 
 
 
