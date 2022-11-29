@@ -228,3 +228,46 @@ dataBFE1 %>% ggplot(aes(x = hour2, y = y_hun))+geom_line()+facet_wrap(~id, nrow 
 
 ```
 
+
+
+
+
+## lets simulate!!!!!!!! errors on amplitude!
+
+
+```{r}
+
+times = 20
+Asim = rnorm(times,50,4)
+asimse = 4/sqrt(times)
+x = seq(1,10,length.out = times)
+phi = rnorm(times,0.5,0.0001)
+k = rnorm(times,10,0.0001)
+
+y = Asim*sin(x+phi)+k
+
+
+plot(x,y)
+
+sinx<-sin(x)
+cosx<-cos(x)
+
+m1 = lm(y~sinx+cosx)
+m11 = summary(m1)
+m11
+
+A = sqrt((m11$coefficients[2,1])^2+( m11$coefficients[3,1])^2)
+
+b1 = m11$coefficients[2,1]
+db1 = m11$coefficients[2,2]
+b2 = m11$coefficients[3,1]
+db2 = m11$coefficients[3,2]
+
+
+
+deriv1 = b1/(sqrt(b1^2+b2^2))
+deriv2 = b2/(sqrt(b1^2+b2^2))
+seA = sqrt(((deriv1*db1)^2)+((deriv2*db2)^2)+(2*deriv1*deriv2*vcov(m1)[2,3]))
+
+sdA = seA*sqrt(times)
+```
