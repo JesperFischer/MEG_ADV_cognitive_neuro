@@ -82,7 +82,7 @@ dataBFE1 = dataBFE %>% filter(id %in% ids$id)
 ```{r}
 library(lmerTest)
 # Freshness: Simple oscillation model
-modelBFEfreshCirc<-lmer(fresh~sinCirc+cosCirc+(cosCirc|id),data=dataBFE1)
+modelBFEfreshCirc<-lmer(fresh~sinCirc+cosCirc+(1|id),data=dataBFE1)
 m_temp<-summary(modelBFEfreshCirc)
 m_temp
 
@@ -98,7 +98,24 @@ phi = atan(m_temp$coefficients[3,1]/m_temp$coefficients[2,1])
 
 A
 phi
+
+
+b1 = m_temp$coefficients[2,1]
+db1 = m_temp$coefficients[2,2]
+b2 = m_temp$coefficients[3,1]
+db2 = m_temp$coefficients[3,2]
+
+
+
+#other way
+deriv1 = b1/(sqrt(b1^2+b2^2))
+deriv2 = b2/(sqrt(b1^2+b2^2))
+
+sqrt(((deriv1*db1)^2)+((deriv2*db2)^2)+2*deriv1*deriv2*modelBFEfreshCirc@vcov_beta[2,3])
+
 ```
+
+
 #Non linear analyses:
 ##freshness
 
