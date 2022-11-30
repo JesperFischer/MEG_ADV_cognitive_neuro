@@ -99,19 +99,25 @@ phi = atan(m_temp$coefficients[3,1]/m_temp$coefficients[2,1])
 A
 phi
 
+#calculating the se for the amplitude
 
 b1 = m_temp$coefficients[2,1]
 db1 = m_temp$coefficients[2,2]
 b2 = m_temp$coefficients[3,1]
 db2 = m_temp$coefficients[3,2]
 
+db11 = m_temp$coefficients[2,2]*sqrt(323)
+db22 = m_temp$coefficients[3,2]*sqrt(323)
 
 
 #other way
 deriv1 = b1/(sqrt(b1^2+b2^2))
 deriv2 = b2/(sqrt(b1^2+b2^2))
 
-sqrt(((deriv1*db1)^2)+((deriv2*db2)^2)+2*deriv1*deriv2*modelBFEfreshCirc@vcov_beta[2,3])
+
+sd = sqrt(((deriv1*db11)^2)+((deriv2*db22)^2)+2*deriv1*deriv2*modelBFEfreshCirc@vcov_beta[2,3])
+
+se = sd/sqrt(323)
 
 ```
 
